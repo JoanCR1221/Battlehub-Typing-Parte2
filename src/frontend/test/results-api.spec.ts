@@ -5,12 +5,10 @@ function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 }
 
-function setup(response: Response | (() => Response), options: { token?: string; devUser?: string } = {}) {
+function setup(response: Response | (() => Response)) {
   const fetchFn = vi.fn(async () => (typeof response === 'function' ? response() : response));
   const api = new ResultsApi({
     baseUrl: 'http://localhost:5080',
-    getAccessToken: options.token ? () => options.token : undefined,
-    devUser: options.devUser,
     fetchFn: fetchFn as unknown as typeof fetch,
   });
   return { api, fetchFn };
@@ -19,12 +17,12 @@ function setup(response: Response | (() => Response), options: { token?: string;
 const requested = (fetchFn: ReturnType<typeof vi.fn>) => fetchFn.mock.calls[0] as unknown as [string, RequestInit];
 
 describe('ResultsApi', () => {
-  it('pide el historial del jugador codificando su id (los de Auth0 llevan «|»)', async () => {
+  it('pide el historial del jugador codificando su id (los que entrega el Shell pueden llevar «|»)', async () => {
     const { api, fetchFn } = setup(json([]));
 
-    await api.history('auth0|64f0c1');
+    await api.history('externo|64f0c1');
 
-    expect(requested(fetchFn)[0]).toBe('http://localhost:5080/api/games/typing/players/auth0%7C64f0c1/history');
+    expect(requested(fetchFn)[0]).toBe('http://localhost:5080/api/games/typing/players/externo%7C64f0c1/history');
   });
 
   it('agrega limit y offset a la consulta cuando se piden', async () => {
@@ -43,22 +41,12 @@ describe('ResultsApi', () => {
     expect(await setup(json(stats)).api.stats('ana')).toEqual(stats);
   });
 
-  it('envía el token como Bearer', async () => {
-    const { api, fetchFn } = setup(json({}), { token: 'abc.def.ghi' });
+  it('solo pide JSON: no envía credenciales ni encabezados de identidad', async () => {
+    const { api, fetchFn } = setup(json({}));
 
     await api.stats('ana');
 
-    expect(requested(fetchFn)[1].headers).toMatchObject({ Authorization: 'Bearer abc.def.ghi' });
-  });
-
-  it('en desarrollo se identifica con X-Dev-User y no manda Authorization', async () => {
-    const { api, fetchFn } = setup(json({}), { devUser: 'ana' });
-
-    await api.stats('ana');
-
-    const headers = requested(fetchFn)[1].headers as Record<string, string>;
-    expect(headers['X-Dev-User']).toBe('ana');
-    expect(headers.Authorization).toBeUndefined();
+    expect(requested(fetchFn)[1].headers).toEqual({ Accept: 'application/json' });
   });
 
   it('el resultado de una partida sin guardar es null, no un error', async () => {
@@ -67,13 +55,13 @@ describe('ResultsApi', () => {
     expect(await api.result('m1')).toBeNull();
   });
 
-  it('un 401 se convierte en un error con un mensaje entendible', async () => {
-    const { api } = setup(new Response(null, { status: 401 }));
+  it('un 404 al pedir las estadísticas se convierte en un error con un mensaje entendible', async () => {
+    const { api } = setup(new Response(null, { status: 404 }));
 
     await expect(api.stats('ana')).rejects.toMatchObject({
       name: 'ApiError',
-      status: 401,
-      message: expect.stringContaining('identidad'),
+      status: 404,
+      message: expect.stringContaining('No se encontró'),
     });
   });
 

@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using TypingBattle.Api.Auth;
 using TypingBattle.Api.Game;
 using TypingBattle.Api.Results;
 
@@ -11,7 +9,6 @@ namespace TypingBattle.Api.Hubs;
 /// Flujo del cliente: <c>JoinGame</c> → <c>SetReady</c> → (llega <c>GameStarted</c> con el texto) →
 /// <c>SubmitProgress</c> en cada cambio → llega <c>GameFinished</c>. Ver docs/hub-typing.md.
 /// </summary>
-[Authorize(Policy = TypingPolicies.Play)]
 public sealed class TypingHub(GameRoomManager rooms, RoomEventPublisher publisher) : Hub<ITypingClient>
 {
     public const string Path = "/hubs/typing";
@@ -23,8 +20,12 @@ public sealed class TypingHub(GameRoomManager rooms, RoomEventPublisher publishe
 
     /// <summary>Entra a la sala de la partida (la crea si es el primero) y devuelve su estado actual.</summary>
     /// <param name="matchId">Id de la partida que entregó Matchmaking.</param>
+    /// <param name="userId">
+    /// Id del jugador (<c>currentUser.id</c> del contexto del juego). Interino: el juego confía en el valor que llega.
+    /// R05 y R06 definen cómo el Shell entrega a los jugadores y cómo se acredita cada uno.
+    /// </param>
     /// <param name="displayName">Nombre a mostrar (<c>currentUser.displayName</c> del contexto del juego).</param>
-    public async Task<RoomSnapshotDto> JoinGame(string matchId, string? displayName = null)
+    public async Task<RoomSnapshotDto> JoinGame(string matchId, string userId, string? displayName = null)
     {
         matchId = matchId?.Trim() ?? "";
         if (matchId.Length is 0 or > ResultValidator.MaxIdLength)
@@ -32,8 +33,11 @@ public sealed class TypingHub(GameRoomManager rooms, RoomEventPublisher publishe
             throw new HubException($"matchId es obligatorio y no puede superar {ResultValidator.MaxIdLength} caracteres.");
         }
 
-        var user = Context.User!;
-        var userId = user.GetUserId() ?? throw new HubException("No se pudo identificar al usuario.");
+        userId = userId?.Trim() ?? "";
+        if (userId.Length is 0 or > ResultValidator.MaxIdLength)
+        {
+            throw new HubException($"userId es obligatorio y no puede superar {ResultValidator.MaxIdLength} caracteres.");
+        }
 
         if (Context.Items.TryGetValue(MatchKey, out var current) && current is string currentMatch && currentMatch != matchId)
         {
@@ -41,7 +45,7 @@ public sealed class TypingHub(GameRoomManager rooms, RoomEventPublisher publishe
         }
 
         var room = rooms.GetOrCreate(matchId);
-        var result = room.Join(userId, CleanName(displayName) ?? user.GetDisplayName(), Context.ConnectionId);
+        var result = room.Join(userId, CleanName(displayName) ?? userId, Context.ConnectionId);
         if (!result.Ok)
         {
             throw new HubException(result.Error);

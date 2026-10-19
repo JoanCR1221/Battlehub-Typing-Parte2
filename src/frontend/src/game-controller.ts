@@ -162,7 +162,7 @@ export class GameController {
   }
 
   private async enterRoom(): Promise<void> {
-    const snapshot = await this.hub.join(this.context.matchId, this.context.currentUser.displayName);
+    const snapshot = await this.hub.join(this.context.matchId, this.context.currentUser.id, this.context.currentUser.displayName);
     this.applySnapshot(snapshot);
 
     if (this.autoReady && snapshot.state === 'waiting') {
@@ -413,12 +413,6 @@ export function describeError(error: unknown): string {
   const hubMessage = /HubException: (.+)$/s.exec(message)?.[1]?.trim();
   if (hubMessage) {
     return hubMessage;
-  }
-  if (/403|forbidden/i.test(message)) {
-    return 'Tu cuenta no tiene permiso para jugar Typing Battle.';
-  }
-  if (/401|unauthorized/i.test(message)) {
-    return 'No se pudo comprobar tu identidad. Vuelve a iniciar sesión.';
   }
   if (/failed to (start|fetch|complete negotiation)|network|econnrefused/i.test(message)) {
     return 'No se pudo conectar con el servidor del juego.';

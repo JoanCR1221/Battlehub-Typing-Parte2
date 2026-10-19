@@ -6,7 +6,7 @@ Regla del proyecto: las dudas de contrato se resuelven abriendo un Issue en [`ba
 |---|---|---|---|---|
 | 1 | Cómo notifica el juego el fin de partida a Matchmaking | Equipos 2, 4, 5 y 6 | — | Por abrir (con suposición implementada) |
 | 2 | Convención de Module Federation entre el Shell y los juegos | Equipos 3, 4, 5 y 6 | — | Por abrir (con suposición implementada) |
-| 3 | Autenticación y autorización en la API y el hub de cada juego | Equipos 1, 3, 4, 5 y 6 | — | Por abrir (con suposición implementada) |
+| 3 | Autenticación y autorización en la API y el hub de cada juego | Equipos 1, 3, 4, 5 y 6 | — | **Superada en la parte 2:** el juego no maneja autenticación (R04) |
 | 4 | Artefactos prometidos y detalles de gobernanza | Tech Lead | — | Por abrir |
 
 Fuera de GitHub: confirmar con el docente las fechas de entrega y los criterios de evaluación (el contrato no los define).
@@ -85,5 +85,5 @@ Mientras el Tech Lead responde, el código de Typing Battle asume lo siguiente. 
 | Duda | Suposición implementada | Dónde |
 |---|---|---|
 | 1. Fin de partida | Al terminar, el backend guarda el resultado y hace `POST {Matchmaking:BaseUrl}/api/matches/{matchId}/finish` con `{ matchId, gameType, winnerUserId, finishedAt }`. Si `Matchmaking:BaseUrl` está vacía, solo deja constancia en el log. | `Matchmaking/MatchmakingNotifier.cs`; la ruta se cambia en `Matchmaking:FinishPath` |
-| 3. Autenticación | Se validan JWT de Auth0 con `Auth:Domain` y `Auth:Audience`, y el id del jugador es el claim `sub`. En el hub el token viaja en `?access_token=`. El permiso `games.typing.play` se exige **solo si se configura** `Auth:RequiredPermission` (viene apagado): acepta el claim `permissions` de Auth0 con RBAC o el claim `scope`, y responde 403 a quien no lo tiene. Para trabajar sin Auth0 existe `Auth:Mode=Development` (solo en Development y Testing). | `src/backend/TypingBattle.Api/Auth/` |
+| 3. Autenticación | **Retirada en la parte 2 (R04).** En la parte 1 el juego validaba JWT de Auth0 y el permiso `games.typing.play`; ahora no valida nada y el hub recibe el id del jugador en `JoinGame`. R05 y R06 definen cómo el Shell entrega la partida y acredita a cada jugador. | R04, R05, R06 |
 | 2. Module Federation | Remote `typingGame`, archivo `remoteEntry.js`, módulos expuestos `./GameModule` (clase que implementa `GameModule`) y `./GameView` (elemento `<typing-game>`, que el Shell dibuja con `au-compose`), y todos los `@aurelia/*` compartidos como singleton. Extensiones opcionales al contexto: `getAccessToken` y `apiBaseUrl`. Probado con un Shell simulado. | `src/frontend/webpack.config.js`, [`integracion-shell.md`](integracion-shell.md) |
