@@ -17,10 +17,6 @@ export type ConnectionEvent = 'reconnecting' | 'reconnected' | 'closed';
 export interface HubClientOptions {
   /** URL completa del hub, por ejemplo http://localhost:5080/hubs/typing. */
   url: string;
-  /** Token de acceso (JWT de Auth0). Se pide cada vez que SignalR abre una conexión. */
-  getAccessToken?: () => string | undefined | Promise<string | undefined>;
-  /** SOLO desarrollo: identidad sin token (la API debe estar en Auth:Mode=Development). */
-  devUser?: { id: string; name: string };
 }
 
 type Handler<T> = (payload: T) => void;
@@ -42,13 +38,9 @@ export class TypingHubClient {
     connection.onclose(() => this.emitConnection('closed'));
   }
 
-  static create({ url, getAccessToken, devUser }: HubClientOptions): TypingHubClient {
-    const target = devUser
-      ? `${url}?dev_user=${encodeURIComponent(devUser.id)}&dev_name=${encodeURIComponent(devUser.name)}`
-      : url;
-
+  static create({ url }: HubClientOptions): TypingHubClient {
     const connection = new HubConnectionBuilder()
-      .withUrl(target, getAccessToken ? { accessTokenFactory: async () => (await getAccessToken()) ?? '' } : {})
+      .withUrl(url)
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Warning)
       .build();

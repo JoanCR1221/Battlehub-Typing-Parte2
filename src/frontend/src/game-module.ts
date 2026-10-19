@@ -8,8 +8,6 @@ import { ResultsApi } from './services/results-api';
 export interface TypingGameModuleOptions {
   /** Cambia la configuración por defecto (URL de la API, ruta del hub). */
   config?: Partial<TypingConfig>;
-  /** SOLO desarrollo: se identifica sin token. La API debe estar en Auth:Mode=Development. */
-  devAuth?: boolean;
   /** Para pruebas: reemplaza el cliente real del hub. */
   hubFactory?: (url: string, context: GameContext) => TypingHubClient;
 }
@@ -39,19 +37,9 @@ export class TypingGameModule implements GameModule {
       ...this.options.config,
       ...(context.apiBaseUrl ? { apiBaseUrl: context.apiBaseUrl } : {}),
     });
-    const devUser = this.options.devAuth
-      ? { id: context.currentUser.id, name: context.currentUser.displayName }
-      : undefined;
-
     const hubUrl = `${config.apiBaseUrl}${config.hubPath}`;
-    const hub =
-      this.options.hubFactory?.(hubUrl, context) ??
-      TypingHubClient.create({ url: hubUrl, getAccessToken: context.getAccessToken, devUser });
-    const api = new ResultsApi({
-      baseUrl: config.apiBaseUrl,
-      getAccessToken: context.getAccessToken,
-      devUser: devUser?.id,
-    });
+    const hub = this.options.hubFactory?.(hubUrl, context) ?? TypingHubClient.create({ url: hubUrl });
+    const api = new ResultsApi({ baseUrl: config.apiBaseUrl });
 
     // Se prepara todo pero no se conecta: eso lo hace start().
     this.controller = new GameController({ context, hub, api, clock: new ServerClock() });

@@ -47,7 +47,6 @@ export class DevHost {
 
   readonly contextJson = JSON.stringify(this.context, null, 2);
   readonly gameModule = new TypingGameModule({
-    devAuth: true,
     config: this.params.apiBaseUrl ? { apiBaseUrl: this.params.apiBaseUrl } : undefined,
   });
 

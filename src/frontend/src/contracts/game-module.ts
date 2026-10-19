@@ -7,15 +7,14 @@ export interface CurrentUser {
 /**
  * Contexto que el Shell le entrega al juego al cargarlo (03-contratos-tecnicos.md, sección 5).
  *
- * `getAccessToken` y `apiBaseUrl` NO forman parte del contrato: son extensiones opcionales que necesita
- * la API propia del juego para autenticar al usuario (duda 3 de docs/contratos-pendientes.md).
- * Si el Shell no las entrega, el juego usa el token que tenga configurado y `TYPING_API_URL`.
+ * `apiBaseUrl` NO forma parte del contrato: es una extensión opcional con la dirección de la API del juego.
+ * Si el Shell no la entrega, el juego usa la que tenga configurada (`TYPING_API_URL`).
+ * El juego no maneja credenciales: no recibe ni envía tokens.
  */
 export interface GameContext {
   matchId: string;
   gameType: string;
   currentUser: CurrentUser;
-  getAccessToken?: () => string | undefined | Promise<string | undefined>;
   apiBaseUrl?: string;
 }
 
