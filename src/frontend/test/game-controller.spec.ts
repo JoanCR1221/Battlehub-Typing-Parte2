@@ -56,7 +56,7 @@ describe('GameController', () => {
       await controller.connect();
 
       expect(connection.started).toBe(true);
-      expect(connection.calls('JoinGame')).toEqual([['match-001', 'Ana']]);
+      expect(connection.calls('JoinGame')).toEqual([['match-001', 'ana', 'Ana']]);
       expect(connection.calls('SetReady')).toHaveLength(1);
       expect(controller.phase).toBe('lobby');
       expect(controller.players.map((p) => p.userId)).toEqual(['ana']);

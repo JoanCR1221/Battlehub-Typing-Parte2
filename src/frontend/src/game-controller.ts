@@ -162,7 +162,7 @@ export class GameController {
   }
 
   private async enterRoom(): Promise<void> {
-    const snapshot = await this.hub.join(this.context.matchId, this.context.currentUser.displayName);
+    const snapshot = await this.hub.join(this.context.matchId, this.context.currentUser.id, this.context.currentUser.displayName);
     this.applySnapshot(snapshot);
 
     if (this.autoReady && snapshot.state === 'waiting') {

@@ -70,9 +70,9 @@ export class TypingHubClient {
     return this.connection.start();
   }
 
-  /** Entra a la sala de la partida y devuelve su estado. Los dos argumentos son obligatorios en SignalR. */
-  join(matchId: string, displayName: string | null): Promise<RoomSnapshot> {
-    return this.connection.invoke<RoomSnapshot>('JoinGame', matchId, displayName);
+  /** Entra a la sala de la partida y devuelve su estado. Los tres argumentos son obligatorios en SignalR. */
+  join(matchId: string, userId: string, displayName: string | null): Promise<RoomSnapshot> {
+    return this.connection.invoke<RoomSnapshot>('JoinGame', matchId, userId, displayName);
   }
 
   ready(): Promise<void> {
