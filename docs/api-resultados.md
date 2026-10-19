@@ -13,10 +13,10 @@ Reglas comunes:
 
 - JSON en `camelCase`.
 - **Fechas en UTC**, ISO-8601 con sufijo `Z`. Al recibir, un valor con offset (`-06:00`) se convierte a UTC y un valor **sin zona** se rechaza con 400.
-- Los ids de jugador pueden traer caracteres especiales (los de Auth0 son `auth0|64f0c1...`): en la URL hay que codificarlos (`encodeURIComponent`).
+- Los ids de jugador pueden traer caracteres especiales (por ejemplo `externo|64f0c1`): en la URL hay que codificarlos (`encodeURIComponent`).
 - Errores de validación: `400` con formato `application/problem+json` y el detalle en `errors`, por campo.
 
-> Autenticación: todos los endpoints exigen un usuario autenticado (`401` si no hay). Con Auth0, un JWT en `Authorization: Bearer`; en desarrollo local, el encabezado `X-Dev-User`. Si se configura `Auth:RequiredPermission`, el token además debe traer ese permiso (`403` si no). El detalle está en el README, y cómo se autentica cada juego sigue como duda 3 de [`contratos-pendientes.md`](contratos-pendientes.md).
+> Sin autenticación: el juego no valida tokens ni conoce Auth0 (parte 2, R04). Cualquier llamada a estos endpoints se acepta; no exponga la API a internet tal cual. Cómo entrega el Shell a los jugadores se define en R05 y R06.
 
 ## POST /results
 

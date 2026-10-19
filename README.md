@@ -6,7 +6,7 @@ Este repositorio implementa los contratos de [`battlehub-contracts`](https://git
 
 **Integrantes:** Joan, Johana, Dalla y Wayner.
 
-> **Estado:** en construcción. El backend (hub de la partida, API REST de resultados, persistencia y autenticación) y el microfrontend (integración por Module Federation e interfaz del juego) están completos. Falta la integración con el Shell real y los pasos de gobernanza de [Pendientes](#pendientes). Ver [Pendientes](#pendientes).
+> **Estado:** en construcción. El backend (hub de la partida, API REST de resultados y persistencia) y el microfrontend (integración por Module Federation e interfaz del juego) están completos. Falta la integración con el Shell real y los pasos de gobernanza de [Pendientes](#pendientes). Ver [Pendientes](#pendientes).
 
 ## Stack
 
@@ -15,7 +15,7 @@ Este repositorio implementa los contratos de [`battlehub-contracts`](https://git
 | Microfrontend | Aurelia 2, cargado por el Shell con Module Federation (Webpack 5) |
 | Backend | .NET 10: API REST + hub SignalR en `/hubs/typing` |
 | Base de datos | SQLite con Entity Framework Core ([ADR](docs/adr-borradores/ADR-NNN-motor-de-base-de-datos.md)) |
-| Autenticación | Auth0 (JWT, tenant compartido del proyecto); modo Development para trabajar sin Auth0 |
+| Autenticación | Ninguna en el juego: Auth0 lo maneja solo el Shell y el Profile Service (parte 2, R04) |
 | CI | GitHub Actions |
 
 ## Estructura
@@ -24,7 +24,7 @@ Este repositorio implementa los contratos de [`battlehub-contracts`](https://git
 TypingBattle.slnx                          → solución .NET (en la raíz)
 /src
   /frontend                                → microfrontend Aurelia 2 (package.json, Webpack y sus pruebas en /test)
-  /backend/TypingBattle.Api                → API .NET 10: hub /hubs/typing, resultados REST, persistencia y autenticación
+  /backend/TypingBattle.Api                → API .NET 10: hub /hubs/typing, resultados REST y persistencia
 /tests
   /backend/TypingBattle.UnitTests          → pruebas unitarias (Category=Unit)
   /backend/TypingBattle.IntegrationTests   → pruebas de integración contra SQLite real (Category=Integration)
@@ -48,10 +48,10 @@ dotnet run --project src/backend/TypingBattle.Api
 
 La API queda en `http://localhost:5080`. Comprobación de salud en `/health` y, en Development, el documento OpenAPI en `/openapi/v1.json`. La base SQLite se crea sola junto al proyecto (`src/backend/TypingBattle.Api/typing-battle.db`); Git ignora ese archivo y sus auxiliares `-wal` y `-shm`. La ruta se cambia con `ConnectionStrings:Typing`. Los orígenes que el navegador puede usar para llamar a la API se configuran en `Cors:AllowedOrigins`.
 
-**Autenticación.** Todo lo que no sea `/health` exige un usuario. `dotnet run` usa el perfil de `launchSettings.json`, que activa `Auth__Mode=Development`: no hace falta Auth0, basta con indicar quién eres con el encabezado `X-Dev-User` (REST) o con `?dev_user=ana&dev_name=Ana` en la URL del hub. Ese modo solo funciona en los entornos Development y Testing; en cualquier otro la API se niega a arrancar. Para usar Auth0 de verdad configure `Auth__Mode=Auth0`, `Auth__Domain` (por ejemplo `mi-tenant.us.auth0.com`) y `Auth__Audience`. Para exigir además el permiso `games.typing.play`, configure `Auth__RequiredPermission=games.typing.play`: sin ese permiso en el token (claim `permissions` con RBAC activado en Auth0, o `scope`) la API y el hub responden 403. Con `Auth__Mode=Development` se simula con el encabezado `X-Dev-Permissions` (o `dev_permissions` en la URL del hub).
+**Sin autenticación en el juego.** La API y el hub no validan tokens ni conocen Auth0: eso lo maneja solo el Shell junto con el Profile Service. El hub recibe el id del jugador en `JoinGame(matchId, userId, displayName)`. Es una solución **interina**: hasta que R05 y R06 definan cómo el Shell entrega la partida y los jugadores, el juego confía en el valor que llega. No exponga esta API a internet tal cual.
 
 ```bash
-curl -H "X-Dev-User: ana" http://localhost:5080/api/games/typing/players/ana/stats
+curl http://localhost:5080/api/games/typing/players/ana/stats
 ```
 
 **Configuración de la partida.** Duración, jugadores mínimos y demás reglas están en la sección `Typing` de `appsettings.json`; en variables de entorno se escriben con doble guion bajo. Para probar la partida sin un segundo jugador: `Typing__MinPlayers=1`. El aviso del fin de partida a Matchmaking se activa con `Matchmaking__BaseUrl`. La tabla completa está en [`docs/hub-typing.md`](docs/hub-typing.md).

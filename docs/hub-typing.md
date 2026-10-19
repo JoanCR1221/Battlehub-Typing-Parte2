@@ -5,22 +5,21 @@ Hub SignalR propio del juego, independiente del Lobby Hub de Matchmaking (`03-co
 ## Conexión
 
 - URL: `http://localhost:5080/hubs/typing` en local.
-- Autenticación (ver el README): un JWT de Auth0 en `accessTokenFactory`; en desarrollo local, sin Auth0, los parámetros `?dev_user=ana&dev_name=Ana` en la URL.
-- Si el servidor exige un permiso (`Auth:RequiredPermission`, por ejemplo `games.typing.play`), un token sin él recibe `403` al conectar.
-- El id del jugador es el claim `sub` del token. Debe coincidir con `currentUser.id` del contexto del juego, porque es el `userId` con el que luego se consulta el historial.
+- Sin autenticación: el hub no valida tokens ni conoce Auth0 (parte 2, R04).
+- El id del jugador lo envía el cliente en `JoinGame`. Debe ser el `currentUser.id` del contexto del juego, porque es el `userId` con el que luego se consulta el historial. Es una solución **interina**: R05 y R06 definen cómo el Shell entrega a los jugadores y cómo se acredita cada uno.
 - Todos los nombres del JSON van en `camelCase`, las fechas en UTC con sufijo `Z` y los estados como texto (`"running"`).
 
 ```ts
 import { HubConnectionBuilder } from '@microsoft/signalr';
 
 const connection = new HubConnectionBuilder()
-  .withUrl(`${apiBase}/hubs/typing`, { accessTokenFactory: () => token })
+  .withUrl(`${apiBase}/hubs/typing`)
   .withAutomaticReconnect()
   .build();
 
 connection.on('GameStarted', (e) => { /* e.text ya se puede mostrar */ });
 await connection.start();
-const room = await connection.invoke('JoinGame', matchId, displayName);
+const room = await connection.invoke('JoinGame', matchId, userId, displayName);
 await connection.invoke('SetReady');
 await connection.invoke('SubmitProgress', typedSoFar);
 ```
@@ -37,7 +36,7 @@ stateDiagram-v2
     finished --> [*]
 ```
 
-1. Cada jugador llama a `JoinGame(matchId, displayName)` y luego a `SetReady()`. El microfrontend puede hacer ambas cosas dentro de `GameModule.start()`.
+1. Cada jugador llama a `JoinGame(matchId, userId, displayName)` y luego a `SetReady()`. El microfrontend puede hacer ambas cosas dentro de `GameModule.start()`.
 2. Cuando todos los conectados están listos (y son al menos `MinPlayers`, 2 por defecto) llega `GameStarting` con la cuenta regresiva.
 3. Al terminar la cuenta llega `GameStarted` con el texto. **El texto no se envía antes.**
 4. Durante la carrera cada cambio se envía con `SubmitProgress(typed)`. Llegan `ProgressUpdated` y `PlayerFinished`.
@@ -45,11 +44,11 @@ stateDiagram-v2
 
 ## Métodos: cliente → servidor
 
-Los dos argumentos de `JoinGame` son obligatorios para SignalR: si no hay nombre, envíe `null`.
+Los tres argumentos de `JoinGame` son obligatorios para SignalR: si no hay nombre, envíe `null`.
 
 | Método | Argumentos | Devuelve | Errores (`HubException`) |
 |---|---|---|---|
-| `JoinGame` | `matchId: string`, `displayName: string \| null` | `RoomSnapshot` | `matchId` vacío o muy largo; partida ya comenzada o terminada (si el jugador no estaba); sala llena |
+| `JoinGame` | `matchId: string`, `userId: string`, `displayName: string \| null` | `RoomSnapshot` | `matchId` o `userId` vacío o muy largo; partida ya comenzada o terminada (si el jugador no estaba); sala llena |
 | `SetReady` | — | — | no se llamó a `JoinGame` |
 | `SubmitProgress` | `typed: string` | — | ninguno: se ignora si no aplica |
 | `LeaveGame` | — | — | ninguno |
