@@ -225,6 +225,43 @@ public class TypingHubTests(TypingApiFactory factory) : IClassFixture<TypingApiF
         Assert.Contains("JoinGame", error.Message);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Joining_requires_a_player_id(string userId)
+    {
+        await using var player = new HubPlayer(factory, "ana");
+        await player.StartAsync();
+
+        var error = await Assert.ThrowsAsync<HubException>(() => player.JoinAsAsync(NewMatchId(), userId, "Ana"));
+
+        Assert.Contains("userId", error.Message);
+    }
+
+    [Fact]
+    public async Task Joining_rejects_a_player_id_that_is_too_long()
+    {
+        await using var player = new HubPlayer(factory, "ana");
+        await player.StartAsync();
+
+        var error = await Assert.ThrowsAsync<HubException>(
+            () => player.JoinAsAsync(NewMatchId(), new string('x', 201), "Ana"));
+
+        Assert.Contains("userId", error.Message);
+    }
+
+    [Fact]
+    public async Task The_display_name_defaults_to_the_player_id()
+    {
+        await using var player = new HubPlayer(factory, "ana");
+        await player.StartAsync();
+
+        var snapshot = await player.JoinAsync(NewMatchId(), displayName: null);
+
+        var me = Assert.Single(snapshot.Players);
+        Assert.Equal(("ana", "ana"), (me.UserId, me.DisplayName));
+    }
+
     [Fact]
     public async Task The_hub_rejects_connections_without_a_user()
     {

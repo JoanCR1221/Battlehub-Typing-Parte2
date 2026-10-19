@@ -47,10 +47,13 @@ internal sealed class Inbox<T>
 /// <summary>Un jugador conectado al hub /hubs/typing del servidor de pruebas (por long polling, sin red real).</summary>
 internal sealed class HubPlayer : IAsyncDisposable
 {
+    private readonly string _userId;
+
     /// <param name="devUser">Usuario de desarrollo (parámetro dev_user de la URL). Solo funciona con Auth:Mode=Development.</param>
     /// <param name="token">JWT de acceso. Va en el encabezado Authorization o, con <paramref name="tokenInQuery"/>, en la URL.</param>
     public HubPlayer(WebApplicationFactory<Program> factory, string? devUser = null, string? token = null, bool tokenInQuery = false, string? devPermissions = null)
     {
+        _userId = devUser ?? "";
         var query = new List<string>();
         if (devUser is not null)
         {
@@ -101,9 +104,13 @@ internal sealed class HubPlayer : IAsyncDisposable
 
     public Task StartAsync() => Connection.StartAsync();
 
-    // Los dos argumentos de JoinGame son obligatorios para SignalR aunque displayName pueda ser null.
+    // Los tres argumentos de JoinGame son obligatorios para SignalR aunque displayName pueda ser null.
     public Task<RoomSnapshotDto> JoinAsync(string matchId, string? displayName) =>
-        Connection.InvokeAsync<RoomSnapshotDto>("JoinGame", matchId, displayName);
+        Connection.InvokeAsync<RoomSnapshotDto>("JoinGame", matchId, _userId, displayName);
+
+    /// <summary>Entra enviando un id de jugador arbitrario (para probar la validación del hub).</summary>
+    public Task<RoomSnapshotDto> JoinAsAsync(string matchId, string userId, string? displayName) =>
+        Connection.InvokeAsync<RoomSnapshotDto>("JoinGame", matchId, userId, displayName);
 
     public Task ReadyAsync() => Connection.InvokeAsync("SetReady");
 
