@@ -12,24 +12,24 @@ describe('TypingHubClient', () => {
     const { connection, client } = setup();
     connection.responses.set('JoinGame', () => snapshot());
 
-    const room = await client.join('match-001', 'Ana');
+    const room = await client.join('match-001', 'ana', 'Ana');
     await client.ready();
     await client.submit('hola');
     await client.leave();
 
     expect(room.matchId).toBe('match-001');
-    expect(connection.calls('JoinGame')).toEqual([['match-001', 'Ana']]);
+    expect(connection.calls('JoinGame')).toEqual([['match-001', 'ana', 'Ana']]);
     expect(connection.calls('SetReady')).toEqual([[]]);
     expect(connection.calls('SubmitProgress')).toEqual([['hola']]);
     expect(connection.calls('LeaveGame')).toEqual([[]]);
   });
 
-  it('envía siempre los dos argumentos de JoinGame, aunque no haya nombre', async () => {
+  it('envía siempre los tres argumentos de JoinGame, aunque no haya nombre', async () => {
     const { connection, client } = setup();
 
-    await client.join('match-001', null);
+    await client.join('match-001', 'ana', null);
 
-    expect(connection.calls('JoinGame')).toEqual([['match-001', null]]);
+    expect(connection.calls('JoinGame')).toEqual([['match-001', 'ana', null]]);
   });
 
   it('entrega los eventos del servidor a quien se suscribió', () => {

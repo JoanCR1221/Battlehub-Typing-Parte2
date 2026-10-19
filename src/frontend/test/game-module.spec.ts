@@ -73,7 +73,7 @@ describe('TypingGameModule (contrato GameModule)', () => {
       await module.start();
 
       expect(connection.started).toBe(true);
-      expect(connection.calls('JoinGame')).toEqual([['match-001', 'Ana']]);
+      expect(connection.calls('JoinGame')).toEqual([['match-001', 'ana', 'Ana']]);
       expect(module.controller?.phase).toBe('lobby');
     });
 

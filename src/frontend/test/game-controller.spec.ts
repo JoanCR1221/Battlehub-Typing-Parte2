@@ -56,7 +56,7 @@ describe('GameController', () => {
       await controller.connect();
 
       expect(connection.started).toBe(true);
-      expect(connection.calls('JoinGame')).toEqual([['match-001', 'Ana']]);
+      expect(connection.calls('JoinGame')).toEqual([['match-001', 'ana', 'Ana']]);
       expect(connection.calls('SetReady')).toHaveLength(1);
       expect(controller.phase).toBe('lobby');
       expect(controller.players.map((p) => p.userId)).toEqual(['ana']);
@@ -402,15 +402,8 @@ describe('describeError', () => {
     expect(describeError(error)).toBe('La sala está llena.');
   });
 
-  it('traduce un 401 y los fallos de red', () => {
-    expect(describeError(new Error("Failed to complete negotiation with the server: Error: Unauthorized: Status code '401'"))).toContain('identidad');
+  it('traduce los fallos de red', () => {
     expect(describeError(new Error('Failed to start the connection: TypeError: Failed to fetch'))).toContain('No se pudo conectar');
-  });
-
-  it('explica que falta el permiso cuando el servidor responde 403', () => {
-    expect(describeError(new Error("Failed to complete negotiation with the server: Error: Forbidden: Status code '403'"))).toBe(
-      'Tu cuenta no tiene permiso para jugar Typing Battle.',
-    );
   });
 
   it('deja pasar otros mensajes y nunca devuelve algo vacío', () => {

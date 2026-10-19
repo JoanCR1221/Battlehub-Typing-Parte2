@@ -13,10 +13,6 @@ export class ApiError extends Error {
 export interface ResultsApiOptions {
   /** URL base de la API del juego, sin «/» final. */
   baseUrl: string;
-  /** Token de acceso (JWT de Auth0). */
-  getAccessToken?: () => string | undefined | Promise<string | undefined>;
-  /** SOLO desarrollo: identidad sin token (encabezado X-Dev-User; la API debe estar en Auth:Mode=Development). */
-  devUser?: string;
   /** Para pruebas. Por defecto, el `fetch` del navegador. */
   fetchFn?: typeof fetch;
 }
@@ -49,19 +45,9 @@ export class ResultsApi {
   }
 
   private async request(path: string): Promise<Response> {
-    const headers: Record<string, string> = { Accept: 'application/json' };
-
-    const token = await this.options.getAccessToken?.();
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-    if (this.options.devUser) {
-      headers['X-Dev-User'] = this.options.devUser;
-    }
-
     const fetchFn = this.options.fetchFn ?? fetch;
-    // Los ids de Auth0 llevan «|» (auth0|64f0c1...): por eso cada id se codifica con encodeURIComponent.
-    return fetchFn(`${this.options.baseUrl}/api/games/typing${path}`, { headers });
+    // Los ids que entrega el Shell pueden traer caracteres como «|»: por eso cada id se codifica con encodeURIComponent.
+    return fetchFn(`${this.options.baseUrl}/api/games/typing${path}`, { headers: { Accept: 'application/json' } });
   }
 
   private async parse<T>(response: Response): Promise<T> {
@@ -74,10 +60,6 @@ export class ResultsApi {
 
 function describe(status: number): string {
   switch (status) {
-    case 401:
-      return 'No se pudo comprobar tu identidad. Vuelve a iniciar sesión.';
-    case 403:
-      return 'No tienes permiso para ver esto.';
     case 404:
       return 'No se encontró lo que buscabas.';
     default:

@@ -23,7 +23,7 @@ export class MockShell {
         import('typingGame/GameView'),
       ]);
 
-      const module = new GameModuleClass({ devAuth: true });
+      const module = new GameModuleClass();
       await module.initialize({
         matchId: new URLSearchParams(window.location.search).get('match') ?? 'shell-mock',
         gameType: 'typing',
