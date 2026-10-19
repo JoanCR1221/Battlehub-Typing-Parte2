@@ -102,6 +102,8 @@ npm run build
 
 ## Flujo de trabajo
 
+Cada requisito de la parte 2 se hace uno por uno: **un Issue, una rama, un PR**. El paso a paso, las reglas del tablero (Pendiente / Se está haciendo / Hecho) y el formato de ramas y commits están en [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 - `main` está protegida: sin push directo; todo entra por Pull Request con CI en verde y al menos 1 aprobación.
 - Commits y títulos de PR en formato semántico: `<tipo>(<alcance opcional>): <descripción en imperativo>`. Tipos: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `perf`.
 - Cada PR cita la sección de `battlehub-contracts` que implementa y adjunta evidencia de pruebas (ver la plantilla de PR).

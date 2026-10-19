@@ -1,11 +1,16 @@
+## Requisito
+
+Closes #
+
+<!-- Número del Issue de este requisito (el id coincide: #4 es R04). Un PR cubre un solo requisito. -->
+
 ## Descripción
 
 <!-- Qué cambia y por qué. -->
 
-## Contrato implementado
+## Cómo comprobar que cumple el «Listo cuando»
 
-<!-- Documento y sección de battlehub-contracts que implementa este PR, si aplica.
-     Ej.: 04-persistencia-y-api-juegos.md → «API REST mínima obligatoria». -->
+<!-- Pasos o comandos para verificarlo. Copie aquí el criterio del Issue y marque lo que se cumple. -->
 
 ## Evidencia de pruebas
 
@@ -13,7 +18,10 @@
 
 ## Checklist
 
-- [ ] El título del PR sigue el formato de commit semántico (`feat(alcance): descripción`).
-- [ ] El pipeline de CI está en verde (build + pruebas unitarias + pruebas de integración).
-- [ ] Al menos 1 revisor aprobó.
-- [ ] Si modifica un contrato de `battlehub-contracts`, referencia el ADR correspondiente.
+- [ ] El PR cubre **un solo** requisito y el Issue quedó vinculado con `Closes #N`.
+- [ ] El título sigue el formato semántico con el id del requisito (`feat(R04): descripción`).
+- [ ] El Issue se movió a «Se está haciendo» con su Fecha de inicio al empezar.
+- [ ] El pipeline de CI está en verde.
+- [ ] No hay secretos en el código (contraseñas, cadenas de conexión, claves).
+- [ ] Al menos 1 persona distinta del autor aprobó.
+- [ ] Al fusionar: el Issue pasa a «Hecho» y se anota la Fecha de fin en el tablero.
