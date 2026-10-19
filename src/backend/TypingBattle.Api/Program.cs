@@ -1,0 +1,45 @@
+using TypingBattle.Api.Auth;
+using TypingBattle.Api.Game;
+using TypingBattle.Api.Hubs;
+using TypingBattle.Api.Results;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddOpenApi();
+builder.Services.AddHealthChecks();
+builder.Services.AddTypingAuth(builder.Configuration, builder.Environment);
+builder.Services.AddTypingResults(builder.Configuration);
+builder.Services.AddTypingGame(builder.Configuration);
+
+// El microfrontend corre en otro origen (el Shell), así que el navegador exige CORS.
+// Los orígenes permitidos salen de la configuración: Cors:AllowedOrigins.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+{
+    if (allowedOrigins.Length > 0)
+    {
+        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+    }
+}));
+
+var app = builder.Build();
+
+await app.Services.InitializeTypingDatabaseAsync();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapHealthChecks("/health");
+app.MapResultsEndpoints();
+app.MapHub<TypingHub>(TypingHub.Path);
+
+app.Run();
+
+// Permite que los proyectos de pruebas usen WebApplicationFactory<Program>.
+public partial class Program;
