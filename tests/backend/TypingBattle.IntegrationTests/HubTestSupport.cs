@@ -47,40 +47,18 @@ internal sealed class Inbox<T>
 /// <summary>Un jugador conectado al hub /hubs/typing del servidor de pruebas (por long polling, sin red real).</summary>
 internal sealed class HubPlayer : IAsyncDisposable
 {
-    private readonly string _userId;
-
-    /// <param name="devUser">Usuario de desarrollo (parámetro dev_user de la URL). Solo funciona con Auth:Mode=Development.</param>
-    /// <param name="token">JWT de acceso. Va en el encabezado Authorization o, con <paramref name="tokenInQuery"/>, en la URL.</param>
-    public HubPlayer(WebApplicationFactory<Program> factory, string? devUser = null, string? token = null, bool tokenInQuery = false, string? devPermissions = null)
+    /// <param name="userId">Id del jugador. El hub no valida identidad: confía en este valor.</param>
+    public HubPlayer(WebApplicationFactory<Program> factory, string userId)
     {
-        _userId = devUser ?? "";
-        var query = new List<string>();
-        if (devUser is not null)
-        {
-            query.Add($"dev_user={Uri.EscapeDataString(devUser)}&dev_name={Uri.EscapeDataString(devUser)}");
-            if (devPermissions is not null)
-            {
-                query.Add($"dev_permissions={Uri.EscapeDataString(devPermissions)}");
-            }
-        }
-
-        if (token is not null && tokenInQuery)
-        {
-            query.Add($"access_token={Uri.EscapeDataString(token)}");
-        }
-
+        UserId = userId;
         var server = factory.Server;
-        var url = new Uri(server.BaseAddress, "/hubs/typing" + (query.Count > 0 ? "?" + string.Join("&", query) : ""));
+        var url = new Uri(server.BaseAddress, "/hubs/typing");
 
         Connection = new HubConnectionBuilder()
             .WithUrl(url, options =>
             {
                 options.HttpMessageHandlerFactory = _ => server.CreateHandler();
                 options.Transports = HttpTransportType.LongPolling;
-                if (token is not null && !tokenInQuery)
-                {
-                    options.AccessTokenProvider = () => Task.FromResult<string?>(token);
-                }
             })
             .AddJsonProtocol(json =>
                 json.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)))
@@ -94,6 +72,7 @@ internal sealed class HubPlayer : IAsyncDisposable
         Connection.On<GameFinishedDto>("GameFinished", Finished.Add);
     }
 
+    public string UserId { get; }
     public HubConnection Connection { get; }
     public Inbox<RoomSnapshotDto> Rooms { get; } = new();
     public Inbox<GameStartingDto> Starting { get; } = new();
@@ -106,7 +85,7 @@ internal sealed class HubPlayer : IAsyncDisposable
 
     // Los tres argumentos de JoinGame son obligatorios para SignalR aunque displayName pueda ser null.
     public Task<RoomSnapshotDto> JoinAsync(string matchId, string? displayName) =>
-        Connection.InvokeAsync<RoomSnapshotDto>("JoinGame", matchId, _userId, displayName);
+        Connection.InvokeAsync<RoomSnapshotDto>("JoinGame", matchId, UserId, displayName);
 
     /// <summary>Entra enviando un id de jugador arbitrario (para probar la validación del hub).</summary>
     public Task<RoomSnapshotDto> JoinAsAsync(string matchId, string userId, string? displayName) =>

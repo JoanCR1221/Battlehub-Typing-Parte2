@@ -266,7 +266,7 @@ public class TypingHubTests(TypingApiFactory factory) : IClassFixture<TypingApiF
     public async Task The_hub_needs_no_credentials()
     {
         // Conexión sin token ni encabezados de ningún tipo: el juego no exige identidad.
-        await using var player = new HubPlayer(factory);
+        await using var player = new HubPlayer(factory, "invitado");
 
         await player.StartAsync();
 
