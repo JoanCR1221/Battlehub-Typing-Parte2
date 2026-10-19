@@ -414,12 +414,6 @@ export function describeError(error: unknown): string {
   if (hubMessage) {
     return hubMessage;
   }
-  if (/403|forbidden/i.test(message)) {
-    return 'Tu cuenta no tiene permiso para jugar Typing Battle.';
-  }
-  if (/401|unauthorized/i.test(message)) {
-    return 'No se pudo comprobar tu identidad. Vuelve a iniciar sesión.';
-  }
   if (/failed to (start|fetch|complete negotiation)|network|econnrefused/i.test(message)) {
     return 'No se pudo conectar con el servidor del juego.';
   }
