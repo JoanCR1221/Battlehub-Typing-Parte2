@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Http.HttpResults;
-using TypingBattle.Api.Auth;
 
 namespace TypingBattle.Api.Results;
 
@@ -13,7 +12,7 @@ public static class ResultsEndpoints
 
     public static IEndpointRouteBuilder MapResultsEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup(BasePath).WithTags("Typing Battle · resultados").RequireAuthorization(TypingPolicies.Play);
+        var group = app.MapGroup(BasePath).WithTags("Typing Battle · resultados");
 
         group.MapPost("/results", SaveResult)
             .WithName("SaveTypingResult")

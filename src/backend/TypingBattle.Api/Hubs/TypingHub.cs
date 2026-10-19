@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using TypingBattle.Api.Auth;
 using TypingBattle.Api.Game;
 using TypingBattle.Api.Results;
 
@@ -11,7 +9,6 @@ namespace TypingBattle.Api.Hubs;
 /// Flujo del cliente: <c>JoinGame</c> → <c>SetReady</c> → (llega <c>GameStarted</c> con el texto) →
 /// <c>SubmitProgress</c> en cada cambio → llega <c>GameFinished</c>. Ver docs/hub-typing.md.
 /// </summary>
-[Authorize(Policy = TypingPolicies.Play)]
 public sealed class TypingHub(GameRoomManager rooms, RoomEventPublisher publisher) : Hub<ITypingClient>
 {
     public const string Path = "/hubs/typing";

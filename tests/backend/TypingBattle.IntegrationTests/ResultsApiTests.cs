@@ -240,6 +240,16 @@ public class ResultsApiTests(TypingApiFactory factory) : IClassFixture<TypingApi
     }
 
     [Fact]
+    public async Task The_results_api_needs_no_credentials()
+    {
+        var anonymous = factory.Server.CreateClient(); // sin encabezados de identidad
+
+        var response = await anonymous.GetAsync($"{Base}/results/{NewId("no-existe")}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode); // no pide identidad: solo no hay ese resultado
+    }
+
+    [Fact]
     public async Task Health_endpoint_responds()
     {
         var response = await _client.GetAsync("/health");

@@ -263,12 +263,13 @@ public class TypingHubTests(TypingApiFactory factory) : IClassFixture<TypingApiF
     }
 
     [Fact]
-    public async Task The_hub_rejects_connections_without_a_user()
+    public async Task The_hub_needs_no_credentials()
     {
-        await using var anonymous = new HubPlayer(factory);
+        // Conexión sin token ni encabezados de ningún tipo: el juego no exige identidad.
+        await using var player = new HubPlayer(factory);
 
-        var error = await Assert.ThrowsAsync<HttpRequestException>(() => anonymous.StartAsync());
+        await player.StartAsync();
 
-        Assert.Equal(HttpStatusCode.Unauthorized, error.StatusCode);
+        Assert.Equal(HubConnectionState.Connected, player.Connection.State);
     }
 }
