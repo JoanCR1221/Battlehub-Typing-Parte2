@@ -192,16 +192,16 @@ public class ResultsApiTests(TypingApiFactory factory) : IClassFixture<TypingApi
     [Fact]
     public async Task Player_ids_with_special_characters_work_when_url_encoded()
     {
-        // Los ids de Auth0 tienen la forma "auth0|64f0c1..." (con una barra vertical).
-        var auth0Id = $"auth0|{Guid.NewGuid():N}";
-        var me = new Player(auth0Id, "Usuario Auth0", 700, 70, 99);
-        await PostAsync(NewResult(NewId("a0"), T0, auth0Id, me));
+        // Los ids que entrega el Shell pueden traer caracteres especiales, por ejemplo una barra vertical.
+        var externalId = $"externo|{Guid.NewGuid():N}";
+        var me = new Player(externalId, "Usuario externo", 700, 70, 99);
+        await PostAsync(NewResult(NewId("ext"), T0, externalId, me));
 
-        var history = await ReadAsync(await _client.GetAsync($"{Base}/players/{Uri.EscapeDataString(auth0Id)}/history"));
-        var stats = await ReadAsync(await _client.GetAsync($"{Base}/players/{Uri.EscapeDataString(auth0Id)}/stats"));
+        var history = await ReadAsync(await _client.GetAsync($"{Base}/players/{Uri.EscapeDataString(externalId)}/history"));
+        var stats = await ReadAsync(await _client.GetAsync($"{Base}/players/{Uri.EscapeDataString(externalId)}/stats"));
 
         Assert.Single(history.EnumerateArray());
-        Assert.Equal(auth0Id, stats.GetProperty("userId").GetString());
+        Assert.Equal(externalId, stats.GetProperty("userId").GetString());
         Assert.Equal(1, stats.GetProperty("gamesPlayed").GetInt32());
     }
 
