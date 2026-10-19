@@ -46,9 +46,8 @@ const game = new TypingGameModule();
 await game.initialize({
   matchId: 'match-001',
   gameType: 'typing',
-  currentUser: { id: 'auth0|64f0c1', displayName: 'Ana' },
-  getAccessToken: () => auth0.getAccessTokenSilently(), // extensión: ver abajo
-  apiBaseUrl: 'https://typing.ejemplo.cr',                // extensión: ver abajo
+  currentUser: { id: 'user-001', displayName: 'Ana' },
+  apiBaseUrl: 'https://typing.ejemplo.cr', // extensión: ver abajo
 });
 await game.start();
 
@@ -75,12 +74,11 @@ Llamar a `start()` o `pause()` antes de `initialize()` lanza un error que lo exp
 
 ## Extensiones al contexto (no están en el contrato)
 
-La API propia del juego necesita saber quién es el usuario, y el contrato no dice cómo (duda 3 de `contratos-pendientes.md`). Por eso `GameContext` acepta dos campos opcionales:
+`GameContext` acepta un campo opcional:
 
-- `getAccessToken`: función que devuelve el JWT de Auth0 del usuario. Se envía como `Authorization: Bearer` a la API REST y como `access_token` al hub.
 - `apiBaseUrl`: URL base de la API del juego. Si no llega, se usa la de compilación (`TYPING_API_URL`, por defecto `http://localhost:5080`) o `globalThis.__TYPING_BATTLE_CONFIG__`.
 
-El `id` del usuario debe ser el mismo `sub` del JWT: es el `userId` con el que el juego guarda y consulta el historial.
+El juego **no maneja credenciales**: no recibe ni envía tokens, y no conoce Auth0 (parte 2, R04). El `id` del usuario es el `userId` con el que el juego guarda y consulta el historial.
 
 ## Contrato visual
 
